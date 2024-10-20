@@ -11,7 +11,7 @@ export default function FarmerProfile () {
 
   return (
     <View style={styles.container}>
-      {/* <Image source={{ uri: farmer.photo }} style={styles.photo} /> */}
+     
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{farmer.name}</Text>
         <Text style={styles.location}>{farmer.location}</Text>

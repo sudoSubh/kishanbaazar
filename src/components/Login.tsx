@@ -1,26 +1,37 @@
 import React, { useState } from "react";
 import { View, TextInput, Text, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth"; 
+import { auth } from '../../firebaseConfig'; 
 
-const { width, height } = Dimensions.get("window"); // Get device width and height for responsive design
+const { width } = Dimensions.get("window");
 
 export default function Login({ navigation }: { navigation: any }) {
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState(""); 
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = () => {
-    if ((email || phone) && password) {
-      navigation.navigate("Home"); // Navigate to Home on successful input
+  const isEmail = (input: string) => {
+    // Simple email validation pattern
+    const emailPattern = /\S+@\S+\.\S+/;
+    return emailPattern.test(input);
+  };
+
+  const handleLogin = async () => {
+    if (isEmail(email) && password) {
+      try {
+        // Email login
+        await signInWithEmailAndPassword(auth, email, password);
+        navigation.navigate("Home");
+      } catch (err) {
+        setError("Failed to log in. Please check your credentials.");
+      }
     } else {
-      setError("Please enter either an email or phone number, and a password.");
+      setError("Please enter a valid email and password.");
     }
   };
 
   return (
     <View style={styles.container}>
-      
-
       <TextInput
         style={[styles.input, styles.shadow]}
         placeholder="Email Address"
@@ -28,17 +39,6 @@ export default function Login({ navigation }: { navigation: any }) {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
-        placeholderTextColor="#888"
-      />
-
-      <Text style={styles.orText}>OR</Text>
-
-      <TextInput
-        style={[styles.input, styles.shadow]}
-        placeholder="Phone Number"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
         placeholderTextColor="#888"
       />
 
@@ -64,42 +64,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center", // Center content horizontally
-    padding: 19, // Adjusted padding for better spacing
-    backgroundColor: "#f9f9f9", 
+    alignItems: "center",
+    padding: 19,
+    backgroundColor: "#f9f9f9",
     borderRadius: 15,
-  },
-  title: {
-    fontSize: 28, // Adjusted for consistency with Welcome screen
-    fontWeight: "700",
-    color: "#333", // Consistent dark color
-    textAlign: "center",
-    marginBottom: 15,
   },
   input: {
     height: 50,
-    borderColor: "#00796b", // Consistent with button color for a uniform look
+    borderColor: "#00796b",
     borderWidth: 1,
-    borderRadius: 12, // More rounded corners for input fields
+    borderRadius: 12,
     paddingLeft: 15,
     marginBottom: 15,
     backgroundColor: "#fff",
     fontSize: 16,
-    width: width * 0.8, // Dynamic width based on screen size
-    maxWidth: 400, // Restrict max width for larger screens
-  },
-  orText: {
-    textAlign: "center",
-    marginVertical: 10,
-    fontSize: 16,
-    color: "#666", // Consistent secondary color
+    width: width * 0.8,
+    maxWidth: 400,
   },
   loginButton: {
-    backgroundColor: "#00796b", // Consistent teal color
+    backgroundColor: "#00796b",
     padding: 15,
-    borderRadius: 12, // Rounded corners for button
-    width: width * 0.8, // Dynamic width for the button
-    maxWidth: 400, // Restrict max width on larger screens
+    borderRadius: 12,
+    width: width * 0.8,
+    maxWidth: 400,
     marginTop: 10,
   },
   loginButtonText: {
@@ -109,13 +96,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   errorText: {
-    color: "#d32f2f", // Red color for error text
+    color: "#d32f2f",
     marginBottom: 12,
     textAlign: "center",
   },
   shadow: {
-    elevation: 5, // Add shadow for Android
-    shadowColor: "#000", // Shadow for iOS
+    elevation: 5,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,

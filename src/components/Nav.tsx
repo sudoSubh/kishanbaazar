@@ -8,7 +8,7 @@ interface NavProps {
 }
 
 export default function Nav({ navigation }: NavProps) {
-  const isLoggedIn = true; // Temporarily set to true for testing
+  const isLoggedIn = true; 
   return (
     <View style={styles.nav}>
       <TouchableOpacity

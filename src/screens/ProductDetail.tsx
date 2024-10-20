@@ -1,10 +1,14 @@
 import React from "react";
-import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity } from "react-native";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { LinearGradient } from 'expo-linear-gradient'; // For gradient buttons
+import { StyleSheet, View, Text, Image, ScrollView, TouchableOpacity, Dimensions } from "react-native";
+import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
+import { useCart } from '../CartContext';
+
+const { width } = Dimensions.get('window');
 
 const ProductDetail = (props: { route: any; navigation: any }) => {
-  const { route, navigation } = props; // Destructure route and navigation from props
+  const { route, navigation } = props;
+  const { addToCart, updatePriceAndQuantity } = useCart();
   
   const products = [
     {
@@ -116,48 +120,74 @@ const ProductDetail = (props: { route: any; navigation: any }) => {
     },
   ];
 
-  const { id } = route.params;  // Get the product ID from the route
-  const product = products.find((item) => item.id === id);  // Find the product by ID
+  const { id } = route.params;
+  const product = products.find((item) => item.id === id);
 
   if (!product) {
-    return <Text>Product not found!</Text>;  // Handle case if product is not found
+    return <Text>Product not found!</Text>;
   }
 
   const handleAddToCart = () => {
-    navigation.navigate('Cart', { product });
+    addToCart({
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      quantity: 1,
+    });
+    navigation.navigate('Cart');
+  };
+
+  const handleNegotiate = () => {
+    navigation.navigate('Chat', {
+      productId: product.id,
+      productName: product.name,
+      currentPrice: product.price,
+      sellerId: product.seller.id,
+      sellerName: product.seller.name
+    });
   };
   
   return (
     <ScrollView style={styles.container}>
       <View style={styles.imageContainer}>
         <Image source={product.image} style={styles.image} resizeMode="cover" />
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
+        </TouchableOpacity>
       </View>
       <View style={styles.contentContainer}>
         <Text style={styles.name}>{product.name}</Text>
-        <Text style={styles.price}>Price: ₹{product.price}/kg</Text>
-        <Text style={styles.quantity}>Available: {product.quantity} kg</Text>
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>₹{product.price}/kg</Text>
+          <Text style={styles.quantity}>Available: {product.quantity} kg</Text>
+        </View>
         <Text style={styles.description}>{product.description}</Text>
 
-        {/* Seller Info */}
         <View style={styles.sellerContainer}>
-          <Text style={styles.seller}>Seller: {product.seller.name}</Text>
-          <Text style={styles.sellerLocation}>Location: {product.seller.location}</Text>
+          <Text style={styles.sectionTitle}>Seller Information</Text>
+          <View style={styles.sellerInfo}>
+            <MaterialIcons name="store" size={20} color="#4CAF50" style={styles.icon} />
+            <View>
+              <Text style={styles.sellerName}>{product.seller.name}</Text>
+              <Text style={styles.sellerLocation}>{product.seller.location}</Text>
+            </View>
+          </View>
           <View style={styles.ratingContainer}>
-            <MaterialIcons name="star" size={16} color="#f39c12" />
+            <MaterialIcons name="star" size={20} color="#f39c12" style={styles.icon} />
             <Text style={styles.ratingValue}>{product.seller.rating} ({product.seller.reviews} reviews)</Text>
           </View>
         </View>
 
-        {/* Buttons Row */}
         <View style={styles.buttonsRow}>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Cart")}>
-            <LinearGradient colors={['#4CAF50', '#8BC34A']} style={styles.gradientButton}>
+          <TouchableOpacity style={[styles.button, styles.addToCartButton]} onPress={handleAddToCart}>
+            <LinearGradient colors={['#4CAF50', '#45a049']} style={styles.gradientButton}>
               <Text style={styles.buttonText}>Add to Cart</Text>
             </LinearGradient>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Chat")}>
-            <LinearGradient colors={['#ff6347', '#FF4500']} style={styles.gradientButton}>
+          <TouchableOpacity style={[styles.button, styles.negotiateButton]} onPress={handleNegotiate}>
+            <LinearGradient colors={['#3498db', '#2980b9']} style={styles.gradientButton}>
               <Text style={styles.buttonText}>Negotiate</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -167,120 +197,123 @@ const ProductDetail = (props: { route: any; navigation: any }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F0F0F0",
-    
+    backgroundColor: "#f9f9f9",
   },
   imageContainer: {
-    margin: 16,
-    borderRadius: 10,
-    overflow: "hidden",
-    elevation: 7, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    backgroundColor: "#D0D0D0",
-    borderWidth:3,
-    borderColor:"#E0E0E0",
-    height:"35%",
+    width: '100%',
+    height: 300,
+    position: 'relative',
   },
   image: {
-    width: "100%",
-    height: 300,
-    borderRadius: 10,
+    width: '100%',
+    height: '100%',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    padding: 8,
   },
   contentContainer: {
     padding: 20,
-    backgroundColor: "#D0D0D0",
-    marginHorizontal: 16,
-    borderRadius: 10,
-    borderWidth:5,
-    borderColor:"#d3d3d3",
-    elevation: 3, // Shadow for Android
-    shadowColor: "#000", // Shadow for iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    marginTop: -30,
   },
   name: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 8,
+    marginBottom: 10,
+    color: "#333",
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  price: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#4CAF50",
+  },
+  quantity: {
+    fontSize: 16,
+    color: "#666",
   },
   description: {
     fontSize: 16,
-    marginBottom: 12,
-    color: "#555",
-    lineHeight: 22,
-  },
-  price: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  quantity: {
-    fontSize: 18,
     marginBottom: 20,
-  },
-  availabilityText: {
-    fontSize: 18,
-    color: "#4CAF50",
-    fontWeight: "bold",
+    color: "#555",
+    lineHeight: 24,
   },
   sellerContainer: {
     marginBottom: 20,
+    backgroundColor: "#f0f0f0",
+    padding: 15,
+    borderRadius: 10,
   },
-  seller: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+  },
+  sellerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  icon: {
+    marginRight: 10,
   },
   sellerName: {
     fontSize: 16,
-    marginTop: 2,
+    fontWeight: "bold",
+    color: "#333",
   },
   sellerLocation: {
     fontSize: 14,
-    color: "#777",
-    marginTop: 2,
+    color: "#666",
   },
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
   },
   ratingValue: {
     fontSize: 16,
     color: "#f39c12",
-    marginLeft: 4,
   },
   buttonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 15,
+    marginTop: 20,
   },
   button: {
     flex: 1,
-    marginHorizontal: 6,
     borderRadius: 10,
     overflow: 'hidden',
   },
+  addToCartButton: {
+    marginRight: 10,
+  },
+  negotiateButton: {
+    marginLeft: 10,
+  },
   gradientButton: {
     paddingVertical: 15,
-    paddingHorizontal: 15,
     alignItems: "center",
-    borderRadius: 10,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: "bold",
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
   },
 });
 

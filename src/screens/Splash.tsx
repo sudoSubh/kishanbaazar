@@ -1,15 +1,15 @@
 import React, { useEffect } from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
-import { SplashImg } from "../../assets"; // Ensure this path is correct
+import { SplashImg } from "../../assets"; 
 
 const SplashScreen = ({ navigation }: { navigation: any }) => {
   useEffect(() => {
-    // Navigate to Welcome screen after 2 seconds
+   
     const timer = setTimeout(() => {
       navigation.replace("Welcome");
     }, 2000);
 
-    // Clean up the timer when the component unmounts
+   
     return () => clearTimeout(timer);
   }, [navigation]);
 

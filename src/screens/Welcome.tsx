@@ -2,12 +2,12 @@ import { Image, StyleSheet, Text, View, TouchableOpacity, Dimensions } from "rea
 import React, { useState } from "react";
 import Signup from "../components/Signup";
 import Login from "../components/Login";
-import { Logo } from "../../assets"; // Ensure the logo path is correct
+import { Logo } from "../../assets"; 
 
-const { width, height } = Dimensions.get("window"); // Get device width and height for responsive design
+const { width, height } = Dimensions.get("window");
 
 export default function Welcome({ navigation }: { navigation: any }) {
-  const [isLogin, setIsLogin] = useState(true); // Start with Login screen by default
+  const [isLogin, setIsLogin] = useState(true); 
 
   return (
     <View style={styles.wrapper}>

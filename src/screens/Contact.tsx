@@ -15,7 +15,6 @@ export default function Contact () {
 
   const handleSubmit = () => {
     if (name && email && message) {
-      // send contact form data to backend
       Alert.alert("Success", "Your message has been sent.");
       setName("");
       setEmail("");
@@ -27,9 +26,7 @@ export default function Contact () {
 
   return (
     <View style={styles.container}>
-      {/* <View style={styles.header}>
-        <Text style={styles.title}>Contact Us</Text>
-      </View> */}
+      
       <View style={styles.form}>
         <TextInput
           style={styles.input}

@@ -13,13 +13,27 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Nav from "../components/Nav";
 import productsData from "../data/productsData";
 import categoriesData from "../data/categoriesData";
+import { GestureResponderEvent } from 'react-native';
 
 export default function Home({ navigation }: { navigation: any }) {
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Filter products based on search
-  const filteredProducts = productsData.filter((product) =>
-    product.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProducts = productsData
+    .filter((product) =>
+      product.name.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => {
+      const comparison = a.location.localeCompare(b.location);
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  };
+
+  const renderCategory = ({ item }: { item: any }) => (
+    <Categories key={item.id} data={item} navigation={navigation} />
   );
 
   const renderProductCard = ({ item }: { item: any }) => (
@@ -46,45 +60,32 @@ export default function Home({ navigation }: { navigation: any }) {
         </TouchableOpacity>
       </View>
 
-      {/* ScrollView for Content */}
-      <ScrollView style={styles.scrollViewContent} showsVerticalScrollIndicator={false}>
-        {/* Categories Section */}
-        <View style={styles.wrapper}>
-          <Text style={styles.subTitle}>Categories</Text>
-          <View style={styles.categoriesGrid}>
-            {categoriesData.map((data) => (
-              <Categories key={data.id} data={data} navigation={navigation} />
-            ))}
-          </View>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate("Products")}
-          >
-            <Text style={styles.buttonText}>View All</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Products Section */}
-        <View style={styles.productSection}>
-          <View style={styles.productsHeader}>
-            <Text style={styles.sectionTitle}>Products Near You</Text>
-            <TouchableOpacity style={styles.sortButton}>
-              <MaterialIcons name="sort" size={20} color="white" />
-              <Text style={styles.sortButtonText}>Sort by Location</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* FlatList for Products */}
-          <FlatList
-            data={filteredProducts.sort((a, b) =>
-              a.location.localeCompare(b.location)
-            )}
-            renderItem={renderProductCard}
-            keyExtractor={(item) => item.id.toString()} // Convert id to string
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      </ScrollView>
+      {/* FlatList for Categories and Products */}
+      <FlatList
+        data={[{ id: 'categories', type: 'categories' }, ...filteredProducts.map(product => ({ ...product, id: product.id.toString() }))]}
+        renderItem={({ item }: { item: { id: string; type?: string } }) => {
+          if (item.type === 'categories') {
+            return (
+              <View style={styles.wrapper}>
+                <Text style={styles.subTitle}>Categories</Text>
+                <View style={styles.categoriesGrid}>
+                  {categoriesData.map((data) => renderCategory({ item: data }))}
+                </View>
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => navigation.navigate("Products")}
+                >
+                  <Text style={styles.buttonText}>View All</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          }
+          return renderProductCard({ item });
+        }}
+        keyExtractor={(item, index) => item.id ? item.id.toString() : `category-${index}`}
+        showsVerticalScrollIndicator={false}
+        ListFooterComponent={<View style={{ height: 50 }} />} // Add a footer 
+      />
 
       <Nav navigation={navigation} isLoggedIn={false} />
     </View>
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   scrollViewContent: {
-    paddingBottom: 60, // Ensure enough space for navigation
+    paddingBottom: 60, 
   },
   wrapper: {
     backgroundColor: "#FFF",
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    zIndex: 1, // Ensure product card is on top
+    zIndex: 1, 
   },
   productImage: {
     width: 80,
@@ -316,12 +317,13 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#333",
   },
   productLocation: {
     fontSize: 14,
-    color: "#888",
+    color: "#666",
+    marginVertical: 2,
   },
   productDate: {
     fontSize: 12,

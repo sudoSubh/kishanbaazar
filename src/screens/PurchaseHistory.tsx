@@ -2,11 +2,11 @@ import React from 'react';
 import { StyleSheet, View, Text, ScrollView } from 'react-native';
 
 export default function PurchaseHistory() {
-  // Replace with your actual data fetching logic
+ 
   const purchases = [
     { id: 1, item: "Item 1", date: "2024-09-01", amount: "$20" },
     { id: 2, item: "Item 2", date: "2024-09-05", amount: "$30" },
-    // Add more purchases here
+   
   ];
 
   return (

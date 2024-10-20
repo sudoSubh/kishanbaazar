@@ -9,7 +9,14 @@ import {
   Dimensions,
 } from "react-native";
 import React, { useState } from "react";
-const { width } = Dimensions.get("window"); // Get device width for responsive design
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth"; 
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { app } from '../../firebaseConfig'; 
+
+const { width } = Dimensions.get("window"); 
+
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 export default function Signup({ navigation }: { navigation: any }) {
   const [name, setName] = useState("");
@@ -21,39 +28,57 @@ export default function Signup({ navigation }: { navigation: any }) {
 
   const handleSignup = async () => {
     setError("");
+    setLoading(true);
 
-    // Basic validation
-    if (!name || (!email && !phone) || !password) {
+    // Basic validation (unchanged)
+    if (!name || !email || !phone || !password) {
       setError("Please fill in all required fields.");
+      setLoading(false);
       return;
     }
 
-    if (email && !validateEmail(email)) {
+    // Email and phone 
+    if (!validateEmail(email)) {
       setError("Please enter a valid email.");
+      setLoading(false);
       return;
     }
 
-    if (phone && !validatePhone(phone)) {
+    if (!validatePhone(phone)) {
       setError("Please enter a valid phone number.");
+      setLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
+      setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
+      // Create user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
 
-      // Simulate network request (Replace with API call)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Save user data 
+      await setDoc(doc(db, "users", userId), {
+        name,
+        phone,
+        email,
+      });
 
-      // Assume signup is successful
       Alert.alert("Success", "You have signed up successfully!");
       navigation.navigate("Home");
-    } catch (error) {
-      setError("Something went wrong. Please try again.");
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        setError('That email address is already in use!');
+      } else if (error.code === 'auth/invalid-email') {
+        setError('That email address is invalid!');
+      } else {
+        setError('An error occurred. Please try again.');
+        console.error(error);
+      }
     } finally {
       setLoading(false);
     }
@@ -71,7 +96,6 @@ export default function Signup({ navigation }: { navigation: any }) {
 
   return (
     <View style={styles.container}>
-
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <TextInput
@@ -83,7 +107,7 @@ export default function Signup({ navigation }: { navigation: any }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Email (optional)"
+        placeholder="Email "
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -92,7 +116,7 @@ export default function Signup({ navigation }: { navigation: any }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Phone Number (optional)"
+        placeholder="Phone Number "
         value={phone}
         onChangeText={setPhone}
         keyboardType="phone-pad"
@@ -130,29 +154,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     borderRadius: 15,
   },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
-    textAlign: "center",
-  },
   input: {
     height: 50,
-    borderColor: "#00796b", // Consistent with button color for uniform look
+    borderColor: "#00796b",
     borderWidth: 1,
-    borderRadius: 12, // Rounded corners for input fields
+    borderRadius: 12,
     paddingLeft: 15,
     marginBottom: 15,
     backgroundColor: "#fff",
     fontSize: 16,
-    width: width * 0.8, // Dynamic width based on screen size
-    maxWidth: 400, // Max width for larger screens
+    width: width * 0.8,
+    maxWidth: 400,
   },
   button: {
     width: "100%",
     maxWidth: 400,
-    backgroundColor: "#6200ea", // Vibrant button color
+    backgroundColor: "#6200ea",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
@@ -169,4 +186,3 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
-
